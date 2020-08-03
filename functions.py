@@ -213,13 +213,13 @@ def get_stoch_eruptions(data, probabilities, startYear, stopYear,threshYear,refZ
         for i in range(len(probabilities)):
             probaEruptTot += probabilities[i][1]
             if probabilities[i][3] == 4:
-                probaEruptVEI4 += probabilities[i][3]
+                probaEruptVEI4 += probabilities[i][1]
                 listVEI4.append(probabilities[i])
             if probabilities[i][3] == 5:
-                probaEruptVEI5 += probabilities[i][3]
+                probaEruptVEI5 += probabilities[i][1]
                 listVEI5.append(probabilities[i])
             if probabilities[i][3] == 6:
-                probaEruptVEI6 += probabilities[i][3]
+                probaEruptVEI6 += probabilities[i][1]
                 listVEI6.append(probabilities[i])
 
         x = rd.choices([1,0],[probaEruptTot, 1-probaEruptTot], k=stopMonth-startMonth)
