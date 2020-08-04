@@ -375,7 +375,7 @@ def get_carbon_grid(grid, startYear, stopYear):
                     timeDif = grid[i,j][k-1] - grid[i,j][k]
                     if timeDif > 0:
                         amountC, error = quad(carbonAccumulation, 0, timeDif)
-                        logC[grid[i,j][k-1]] += amountC/2
+                        logC[grid[i,j][k-1-startYear]] += amountC/2
                         sumC += amountC/2
                     k -= 1
             carbonGrid[i,j] = sumC

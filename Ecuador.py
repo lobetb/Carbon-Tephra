@@ -25,7 +25,7 @@ Declare variables
 timeStepLength = 1            #Time step for the simulation in months
 inputFileFolder = "C:/Users/Ben/OneDrive - UCL/GVP/"
 inputFile = "GVP_Eruption_Results.xls.xlsx"          #File containing infos for the eruptions, from GVP website
-outputFolder = "C:/Users/Ben/OneDrive - UCL/GVP/OutputMixed/"
+outputFolder = "C:/Users/Ben/OneDrive - UCL/GVP/OutputSequential/"
 VEI4MAT = "atacazo_vei4.mat"
 refVolcano = 'Atacazo'
 probThreshold = 0.8     #Threshold of probability for the isopach
@@ -39,7 +39,7 @@ westLimit = None
 eastLimit = -85
 limits = [northLimit, southLimit, westLimit, eastLimit]
 
-mode = "mixed"     # Mode of inference of the eruptions. "stochastic" does a full stochastic approach
+mode = "sequential"     # Mode of inference of the eruptions. "stochastic" does a full stochastic approach
                         # for VEI4-5-6, "mixed" uses the historical data for VEI 5 and 6 and stochastic for
                         # VEI4. 
                         # "sequential" takes a more sequential approach : first computing
@@ -65,7 +65,7 @@ refVEI = [atacazoVEI4,atacazoVEI5,atacazoVEI6]
 
 
 
-for i in range(2000):
+for i in range(1005):
     counter0 = time.perf_counter()
     data = f.apply_coord_constraints(data, limits)
     refZone = f.get_ref_zone(data, refVolcano)
