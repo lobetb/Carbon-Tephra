@@ -289,7 +289,7 @@ def create_vei_files(inputFileFolder, refVolcano, eruptions, refVEI, refZone):
         fileList.append(temp[0] + "VEI" + temp[1] + ".csv")
     return fileList
     
-def create_grid(inputFileFolder, fileList, cellSize, outputFolder):
+def create_grid(inputFileFolder, fileList, cellSize, outputFolder, probThreshold):
     if not path.exists(outputFolder):
         mkdir(outputFolder)
     if not path.exists(outputFolder + "grid.npy"):
@@ -302,7 +302,7 @@ def create_grid(inputFileFolder, fileList, cellSize, outputFolder):
         for i in range(len(fileList)):
             temp1 = pd.read_csv(savePath / Path(fileList[i]))
             temp = pd.DataFrame()
-            temp = temp1[temp1.iloc[:,2] > 0.8]
+            temp = temp1[temp1.iloc[:,2] >= probThreshold]
             if minLat == None:
                 minLat = min(temp.iloc[:,1])
             elif minLat > min(temp.iloc[:,1]):
@@ -361,7 +361,7 @@ def carbonAccumulation(x):
     res = 501.4*(x**(-0.55))
     return res
 
-def get_carbon_grid(grid, startYear, stopYear):
+def get_carbon_grid(grid, startYear, stopYear, surfaceC):
     carbonGrid = np.empty((len(grid[:]),len(grid[0])))
     logC = [0] * (stopYear - startYear)
     for i in range(len(grid[:])):
@@ -375,9 +375,12 @@ def get_carbon_grid(grid, startYear, stopYear):
                     timeDif = grid[i,j][k-1] - grid[i,j][k]
                     if timeDif > 0:
                         amountC, error = quad(carbonAccumulation, 0, timeDif)
-                        logC[grid[i,j][k-1-startYear]] += amountC/2
+                        logC[grid[i,j][k-1]-startYear] += amountC/2
                         sumC += amountC/2
                     k -= 1
+                if surfaceC == "yes":
+                    amountC, error = quad(carbonAccumulation, 0, stopYear - grid[i,j][2])
+                    sumC += amountC
             carbonGrid[i,j] = sumC
             
     return carbonGrid, logC
