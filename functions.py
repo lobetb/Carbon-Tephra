@@ -258,32 +258,32 @@ def get_stoch_eruptions(data, probabilities, startYear, stopYear,threshYear,refZ
     eruptions = eruptions.sort_values(by=['Year'], ascending=False)
     return(eruptions)
 
-def create_vei_files(inputFileFolder, refVolcano, eruptions, refVEI, refZone):
+def create_vei_files(inputFileFolder, refVolcano, data, refVEI, refZone):
     refLat = refZone[2]
     refLon = refZone[3]
     
     savePath = inputFileFolder + "VEIs"
-    for i in range(len(eruptions)):
+    for i in range(len(data)):
         
         if not path.exists(savePath):
             mkdir(savePath)
-        if not path.exists(savePath / Path(eruptions.iloc[i,0] + "VEI" + str(eruptions.iloc[i,2]) + ".csv")):
-            latDecal = eruptions.iloc[i,3] - refLat
-            lonDecal = eruptions.iloc[i,4] - refLon
-            if(eruptions.iloc[i,2]) == 4:
+        if not path.exists(savePath / Path(data.loc[i,'Volcano Name'] + "VEI" + str(data.loc[i,'VEI']) + ".csv")):
+            latDecal = data.loc[i,'Latitude'] - refLat
+            lonDecal = data.loc[i,'Longitude'] - refLon
+            if(data.loc[i,'VEI']) == 4:
                 matCopy = refVEI[0].copy()
-            elif(eruptions.iloc[i,2]) == 5:
+            elif(data.loc[i,'VEI']) == 5:
                 matCopy = refVEI[1].copy()
-            elif(eruptions.iloc[i,2]) == 6:
+            elif(data.loc[i,'VEI']) == 6:
                 matCopy = refVEI[2].copy()
             
             matCopy[:,1] += latDecal
             matCopy[:,0] += lonDecal
             
-            np.savetxt((savePath / Path(eruptions.iloc[i,0] + "VEI" + str(eruptions.iloc[i,2]) + ".csv")),
-                        matCopy, delimiter=",")
+            np.savetxt((savePath / Path(data.loc[i,'Volcano Name'] + "VEI" + str(data.loc[i,'VEI']) + ".csv")),
+                       matCopy, delimiter=",")
     fileList = []
-    uniqueID = (eruptions["Volcano"] + "." + eruptions["VEI"].astype(str)).unique()
+    uniqueID = (data["Volcano Name"] + "." + data["VEI"].astype(str)).unique()
     for i in range(len(uniqueID)):
         temp = uniqueID[i].split(".")
         fileList.append(temp[0] + "VEI" + temp[1] + ".csv")
