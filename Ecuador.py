@@ -22,7 +22,7 @@ Declare variables
 timeStepLength = 1            #Time step for the simulation in months
 inputFileFolder = "C:/Users/Ben/OneDrive - UCL/GVP/"
 inputFile = "GVP_Eruption_Results.xls.xlsx"          #File containing infos for the eruptions, from GVP website
-outputFolder = "C:/Users/Ben/Desktop/results GVP/1500/OutputStochastic/"
+outputFolder = "C:/Users/Ben/Desktop/results GVP/1500-bis/OutputSequential/"
 VEI4MAT = "atacazo_vei4.mat"
 refVolcano = 'Atacazo'
 probThreshold = 0.8     #Threshold of probability for the isopach
@@ -39,7 +39,7 @@ limits = [northLimit, southLimit, eastLimit, westLimit]
 surfaceC = "yes"        # Compute the accumulation of C in the surface soil. "yes" if it needs to be computed. "no" if it doesn't, or "fuck off",
                         # or anything except "yes" actually.
     
-mode = "stochastic"     # Mode of inference of the eruptions. "stochastic" does a full stochastic approach
+mode = "sequential"     # Mode of inference of the eruptions. "stochastic" does a full stochastic approach
                         # for VEI4-5-6, "mixed" uses the historical data for VEI 5 and 6 and stochastic for
                         # VEI4. 
                         # "sequential" takes a more sequential approach : first computing
@@ -82,19 +82,34 @@ atacazoVEI5 = np.array(mat['atacazo_vei5'])
 atacazoVEI6 = np.array(mat['atacazo_vei6'])
 refVEI = [atacazoVEI4,atacazoVEI5,atacazoVEI6]
 
+data = f.apply_coord_constraints(data, limits)
+refZone = f.get_ref_zone(data, refVolcano)
 
-
-for i in range(2005):
+for i in range(1120):
     counter0 = time.perf_counter()
-    data = f.apply_coord_constraints(data, limits)
-    refZone = f.get_ref_zone(data, refVolcano)
     probabilities = f.get_prob(data, startYear, stopYear, thresholdYear,timeStepLength, mode)
     eruptions = f.get_stoch_eruptions(data, probabilities, startYear, stopYear, thresholdYear, refZone, mode)
-    fileList = f.create_vei_files(inputFileFolder, refVolcano, eruptions, refVEI, refZone)
+    fileList = f.create_vei_files(inputFileFolder, refVolcano, data, refVEI, refZone)
     grid, minLat, minLon = f.create_grid(inputFileFolder,fileList,cellSize, outputFolder, probThreshold)
     f.add_eruptions_to_grid(inputFileFolder,fileList, eruptions, grid, probThreshold, minLat, minLon, cellSize)
-    carbonGrid, logC = f.get_carbon_grid(grid, startYear, stopYear, surfaceC)
-    count = f.save_results(outputFolder, carbonGrid, logC, eruptions)
+    carbonGrid, surfaceGrid, logC = f.get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize)
+    count = f.save_results(outputFolder, carbonGrid, surfaceGrid, logC, eruptions)
+    counter1 = time.perf_counter()
+    print(str(count) + ": " + str(counter1-counter0) + " secondes")
+    
+    
+outputFolder = "C:/Users/Ben/Desktop/results GVP/1500-bis/OutputMixed/"
+mode = "mixed"  
+
+for i in range(1120):
+    counter0 = time.perf_counter()
+    probabilities = f.get_prob(data, startYear, stopYear, thresholdYear,timeStepLength, mode)
+    eruptions = f.get_stoch_eruptions(data, probabilities, startYear, stopYear, thresholdYear, refZone, mode)
+    fileList = f.create_vei_files(inputFileFolder, refVolcano, data, refVEI, refZone)
+    grid, minLat, minLon = f.create_grid(inputFileFolder,fileList,cellSize, outputFolder, probThreshold)
+    f.add_eruptions_to_grid(inputFileFolder,fileList, eruptions, grid, probThreshold, minLat, minLon, cellSize)
+    carbonGrid, surfaceGrid, logC = f.get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize)
+    count = f.save_results(outputFolder, carbonGrid, surfaceGrid, logC, eruptions)
     counter1 = time.perf_counter()
     print(str(count) + ": " + str(counter1-counter0) + " secondes")
 
@@ -142,7 +157,7 @@ print('gridErupt :' + str(counter5-counter4))
 
 #Computes the accumulation of carbon for each cell from the startYear to the last eruption.
 #Doesn't compute the surface carbon.
-carbonGrid = f.get_carbon_grid(grid, startYear)
+carbonGrid = f.get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder)
 counter6 = time.perf_counter()
 print('carbonGrid :' + str(counter6-counter5))
 
@@ -151,13 +166,14 @@ print('Total : ' + str(counter6-counter0))
 
 
 
-
+from matplotlib import pyplot as plt
+import math
 carbonDF = pd.DataFrame(carbonGrid)
 
 plt.imshow(carbonDF, cmap=plt.cm.Reds, origin='lower', interpolation=None, extent=[math.ceil(minLon/cellSize)*cellSize + carbonDF.shape[1]*1000,math.ceil(minLon/cellSize)*cellSize,
                                                math.ceil(minLat/cellSize)*cellSize, math.ceil(minLat/cellSize)*cellSize + carbonDF.shape[0]*1000])
 plt.colorbar()
-plt.xlabel("Longitude (mètres)")
-plt.ylabel("Latitude (mètres)")
+plt.xlabel("Easting (mètres)")
+plt.ylabel("Northing (mètres)")
 plt.grid(False)
 """

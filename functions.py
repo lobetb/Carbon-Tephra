@@ -41,13 +41,16 @@ def apply_coord_constraints(data, coordConstraints):
         data = data.loc[(data['Longitude'] < coordConstraints[2])]
     if not coordConstraints[3] == None:
         data = data.loc[(data['Longitude'] > coordConstraints[3])]
+       
+    data = data.loc[(data['VEI'] > 3)]
+    
     data = data.reset_index(drop=True)
 
     return data
 
 def get_ref_zone(data,refVolcano):
     indexLoc = data[data['Volcano Name'] == refVolcano].index.tolist()[0]
-    coords = utm.from_latlon(data.iloc[indexLoc,22], data.iloc[indexLoc,23])
+    coords = utm.from_latlon(data.loc[indexLoc,'Latitude'], data.loc[indexLoc,'Longitude'])
     numZone = coords[2]
     letterZone = coords[3]
     refLon = coords[0]
@@ -245,11 +248,11 @@ def get_stoch_eruptions(data, probabilities, startYear, stopYear,threshYear,refZ
                     
             volcano = rd.choices(vol, weights=prob)
             locIndex = data.index[data['Volcano Name'] == volcano[0]].tolist()[0]
-            coords = utm.from_latlon(data.iloc[locIndex,22],data.iloc[locIndex,23],
+            coords = utm.from_latlon(data.loc[locIndex,'Latitude'],data.loc[locIndex,'Longitude'],
                                      force_zone_number = refZone[0],force_zone_letter = refZone[1])
             latC = coords[1]
             lonC = coords[0]
-            if data.iloc[locIndex,22] >= 0:
+            if data.loc[locIndex,'Latitude'] >= 0:
                 latC = latC+10000000
             
             eruptions.loc[k] = [volcano[0], math.floor(y[i]/12)+startYear,VEI[0], latC, lonC]
@@ -267,9 +270,16 @@ def create_vei_files(inputFileFolder, refVolcano, data, refVEI, refZone):
         
         if not path.exists(savePath):
             mkdir(savePath)
-        if not path.exists(savePath / Path(data.loc[i,'Volcano Name'] + "VEI" + str(data.loc[i,'VEI']) + ".csv")):
-            latDecal = data.loc[i,'Latitude'] - refLat
-            lonDecal = data.loc[i,'Longitude'] - refLon
+        if not path.exists(savePath / Path(data.loc[i,'Volcano Name'] + "VEI" + str(int(data.loc[i,'VEI'])) + ".csv")):
+            convertedCoords = utm.from_latlon(data.loc[i,'Latitude'], data.loc[i,'Longitude'], 
+                                              force_zone_number = refZone[0], force_zone_letter = refZone[1])
+            latC = convertedCoords[1]
+            lonC = convertedCoords[0]
+            if data.loc[i,'Latitude'] > 0:
+                latC = latC+10000000
+                
+            latDecal = latC - refLat
+            lonDecal = lonC - refLon
             if(data.loc[i,'VEI']) == 4:
                 matCopy = refVEI[0].copy()
             elif(data.loc[i,'VEI']) == 5:
@@ -280,10 +290,10 @@ def create_vei_files(inputFileFolder, refVolcano, data, refVEI, refZone):
             matCopy[:,1] += latDecal
             matCopy[:,0] += lonDecal
             
-            np.savetxt((savePath / Path(data.loc[i,'Volcano Name'] + "VEI" + str(data.loc[i,'VEI']) + ".csv")),
+            np.savetxt((savePath / Path(data.loc[i,'Volcano Name'] + "VEI" + str(int(data.loc[i,'VEI'])) + ".csv")),
                        matCopy, delimiter=",")
     fileList = []
-    uniqueID = (data["Volcano Name"] + "." + data["VEI"].astype(str)).unique()
+    uniqueID = (data["Volcano Name"] + "." + data["VEI"].astype(int).astype(str)).unique()
     for i in range(len(uniqueID)):
         temp = uniqueID[i].split(".")
         fileList.append(temp[0] + "VEI" + temp[1] + ".csv")
@@ -361,8 +371,9 @@ def carbonAccumulation(x):
     res = 501.4*(x**(-0.55))
     return res
 
-def get_carbon_grid(grid, startYear, stopYear, surfaceC):
+def get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize):
     carbonGrid = np.empty((len(grid[:]),len(grid[0])))
+    surfaceGrid = carbonGrid.copy()
     logC = [0] * (stopYear - startYear)
     for i in range(len(grid[:])):
         for j in range(len(grid[0])):
@@ -375,20 +386,28 @@ def get_carbon_grid(grid, startYear, stopYear, surfaceC):
                     timeDif = grid[i,j][k-1] - grid[i,j][k]
                     if timeDif > 0:
                         amountC, error = quad(carbonAccumulation, 0, timeDif)
+                        amountC = amountC * cellSize**2
                         logC[grid[i,j][k-1]-startYear] += amountC/2
                         sumC += amountC/2
                     k -= 1
                 if surfaceC == "yes":
                     amountC, error = quad(carbonAccumulation, 0, stopYear - grid[i,j][2])
+                    amountC = amountC * cellSize**2
                     sumC += amountC
+                    logC[grid[i,j][k-1]-startYear] += amountC
+                    surfaceGrid[i,j] = amountC
             carbonGrid[i,j] = sumC
             
-    return carbonGrid, logC
+            
+    return carbonGrid, surfaceGrid, logC
 
-def save_results(outputFolder, carbonGrid, logC, eruptions):
+def save_results(outputFolder, carbonGrid, surfaceGrid, logC, eruptions):
     if not path.exists(outputFolder + "Runs/") :
         mkdir(outputFolder + "Runs/")
     np.savetxt(outputFolder + "Runs/run" + str(len(listdir(outputFolder + "Runs/"))+1) + ".csv",carbonGrid, delimiter=",")
+    if not path.exists(outputFolder + "SurfaceC/") :
+        mkdir(outputFolder + "SurfaceC/")
+    np.savetxt(outputFolder + "SurfaceC/surfaceC" + str(len(listdir(outputFolder + "SurfaceC/"))+1) + ".csv",surfaceGrid, delimiter=",")
     if not path.exists(outputFolder + "LogC/"):
         mkdir(outputFolder + "LogC/")
     np.savetxt(outputFolder + "LogC/logCrun" + str(len(listdir(outputFolder + "LogC/"))+1) + ".csv",logC, delimiter=",")
