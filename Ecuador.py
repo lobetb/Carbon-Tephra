@@ -39,7 +39,7 @@ limits = [northLimit, southLimit, eastLimit, westLimit]
 surfaceC = "yes"        # Compute the accumulation of C in the surface soil. "yes" if it needs to be computed. "no" if it doesn't, or "fuck off",
                         # or anything except "yes" actually.
     
-mode = "sequential"     # Mode of inference of the eruptions. "stochastic" does a full stochastic approach
+mode = "mixed"     # Mode of inference of the eruptions. "stochastic" does a full stochastic approach
                         # for VEI4-5-6, "mixed" uses the historical data for VEI 5 and 6 and stochastic for
                         # VEI4. 
                         # "sequential" takes a more sequential approach : first computing

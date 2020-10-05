@@ -350,7 +350,7 @@ def create_grid(inputFileFolder, fileList, cellSize, outputFolder, probThreshold
         minLat = coords[0]
         minLon = coords[1]
     
-    return mapMatrix, math.ceil(minLat/cellSize)*cellSize, math.ceil(minLon/cellSize)*cellSize
+    return mapMatrix, math.floor(minLat/cellSize)*cellSize, math.floor(minLon/cellSize)*cellSize
 
 def add_eruptions_to_grid(inputFileFolder,fileList, eruptions, grid, probThreshold, minLat, minLon, cellSize):
     veis = dict()
@@ -365,7 +365,9 @@ def add_eruptions_to_grid(inputFileFolder,fileList, eruptions, grid, probThresho
         
         for j in range(len(valuesThresh)):
             grid[(math.floor((valuesThresh.iloc[j,1]-minLat)/cellSize)),math.floor((valuesThresh.iloc[j,0]-minLon)/cellSize)].append(eruptions.iloc[i,1])
-        
+            if math.floor((valuesThresh.iloc[j,1]-minLat)/cellSize) < 0:
+                print(math.floor((valuesThresh.iloc[j,1]-minLat)/cellSize))
+                print(math.floor((valuesThresh.iloc[j,0]-minLon)/cellSize))
 
 def carbonAccumulation(x):
     res = 501.4*(x**(-0.55))
@@ -396,7 +398,7 @@ def get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize)
                         amountC, error = quad(carbonAccumulation, 0, stopYear - grid[i,j][2])
                         amountC = amountC * cellSize**2
                         sumC += amountC
-                        logC[stopYear-startYear] += amountC
+                        logC[stopYear-startYear-1] += amountC
                         surfaceGrid[i,j] = amountC
             carbonGrid[i,j] = sumC
             
