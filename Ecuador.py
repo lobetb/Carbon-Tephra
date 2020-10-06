@@ -85,6 +85,67 @@ refVEI = [atacazoVEI4,atacazoVEI5,atacazoVEI6]
 data = f.apply_coord_constraints(data, limits)
 refZone = f.get_ref_zone(data, refVolcano)
 
+
+
+"""
+Functions calls
+"""
+
+data = f.apply_coord_constraints(data, limits)
+
+refZone = f.get_ref_zone(data, refVolcano)
+
+counter0 = time.perf_counter()
+
+#Compute the probabilities for each volcano of erupting in a given time interval
+probabilities = f.get_prob(data, startYear, stopYear, thresholdYear,timeStepLength, mode)
+counter1 = time.perf_counter()
+print('Probabilities :' + str(counter1-counter0))
+
+#Get a list of eruptions for the volcanoes, based on the previously computed probabilities,
+#on the full time interval defined between startYear and stopYear
+eruptions = f.get_stoch_eruptions(data, probabilities, startYear, stopYear, thresholdYear, refZone, mode)
+counter2 = time.perf_counter()
+print('Eruptions :' + str(counter2-counter1))
+
+#Create VEI files which are lat/lon transpositions of the reference VEI file, and a reference fileList
+#If the VEI files already exists, just generates the fileList for the sake of speed
+fileList = f.create_vei_files(inputFileFolder, refVolcano, data, refVEI, refZone)
+counter3 = time.perf_counter()
+print('Filelist :' + str(counter3-counter2))
+
+#Create a grid containing the coordinates and in which the tephra deposits will be stored
+grid, minLat, minLon = f.create_grid(inputFileFolder,fileList,cellSize, outputFolder, probThreshold)
+counter4 = time.perf_counter()
+print('grid :' + str(counter4-counter3))
+
+#Append years of eruptions to the grid
+f.add_eruptions_to_grid(inputFileFolder,fileList, eruptions, grid, probThreshold, minLat, minLon, cellSize)
+counter5 = time.perf_counter()
+print('gridErupt :' + str(counter5-counter4))
+
+#Computes the accumulation of carbon for each cell from the startYear to the last eruption.
+#Doesn't compute the surface carbon.
+carbonGrid, surfaceGrid, logC = f.get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize)
+counter6 = time.perf_counter()
+print('carbonGrid :' + str(counter6-counter5))
+
+#Saves the results and returns the count
+count = f.save_results(outputFolder, carbonGrid, surfaceGrid, logC, eruptions)
+counter7 = time.perf_counter()
+print('Saving results :' + str(counter7-counter6))
+
+
+print('Total : ' + str(counter7-counter0))
+
+
+
+
+"""
+Batch execution
+"""
+
+"""
 for i in range(1120):
     counter0 = time.perf_counter()
     probabilities = f.get_prob(data, startYear, stopYear, thresholdYear,timeStepLength, mode)
@@ -112,60 +173,13 @@ for i in range(1120):
     count = f.save_results(outputFolder, carbonGrid, surfaceGrid, logC, eruptions)
     counter1 = time.perf_counter()
     print(str(count) + ": " + str(counter1-counter0) + " secondes")
-
-
-
-
-
+ """   
+    
+"""
+Heatmap plot
+"""
 
 """
-Functions calls
-
-
-data = f.apply_coord_constraints(data, limits)
-
-refZone = f.get_ref_zone(data, refVolcano)
-
-counter0 = time.perf_counter()
-
-#Compute the probabilities for each volcano of erupting in a given time interval
-probabilities = f.get_prob(data, stopYear, thresholdYear,timeStepLength)
-counter1 = time.perf_counter()
-print('Probabilities :' + str(counter1-counter0))
-
-#Get a list of eruptions for the volcanoes, based on the previously computed probabilities,
-#on the full time interval defined between startYear and stopYear
-eruptions = f.get_stoch_eruptions(data, probabilities, startYear, stopYear, thresholdYear, refZone)
-counter2 = time.perf_counter()
-print('Eruptions :' + str(counter2-counter1))
-
-#Create VEI files which are lat/lon transpositions of the reference VEI file, and a reference fileList
-#If the VEI files already exists, just generates the fileList for the sake of speed
-fileList = f.create_vei_files(inputFileFolder, refVolcano, eruptions, refVEI)
-counter3 = time.perf_counter()
-print('Filelist :' + str(counter3-counter2))
-
-#Create a grid containing the coordinates and in which the tephra deposits will be stored
-grid, minLat, minLon = f.create_grid(inputFileFolder,fileList,cellSize)
-counter4 = time.perf_counter()
-print('grid :' + str(counter4-counter3))
-
-#Append years of eruptions to the grid
-gridWithEruptions = f.add_eruptions_to_grid(inputFileFolder,fileList, eruptions, grid, probThreshold, minLat, minLon, cellSize)
-counter5 = time.perf_counter()
-print('gridErupt :' + str(counter5-counter4))
-
-#Computes the accumulation of carbon for each cell from the startYear to the last eruption.
-#Doesn't compute the surface carbon.
-carbonGrid = f.get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder)
-counter6 = time.perf_counter()
-print('carbonGrid :' + str(counter6-counter5))
-
-
-print('Total : ' + str(counter6-counter0))
-
-
-
 from matplotlib import pyplot as plt
 import math
 carbonDF = pd.DataFrame(carbonGrid)
