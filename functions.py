@@ -261,11 +261,11 @@ def get_stoch_eruptions(data, probabilities, startYear, stopYear,threshYear,refZ
     eruptions = eruptions.sort_values(by=['Year'], ascending=False)
     return(eruptions)
 
-def create_vei_files(inputFileFolder, refVolcano, data, refVEI, refZone):
+def create_vei_files(outputFolder, refVolcano, data, refVEI, refZone):
     refLat = refZone[2]
     refLon = refZone[3]
     
-    savePath = inputFileFolder + "VEIs"
+    savePath = outputFolder + "VEIs"
     for i in range(len(data)):
         
         if not path.exists(savePath):
@@ -307,7 +307,7 @@ def create_grid(inputFileFolder, fileList, cellSize, outputFolder, probThreshold
         maxLat = None
         minLon = None
         maxLon = None
-        savePath = inputFileFolder + "VEIs"
+        savePath = outputFolder + "VEIs"
         
         for i in range(len(fileList)):
             temp1 = pd.read_csv(savePath / Path(fileList[i]))
@@ -352,9 +352,9 @@ def create_grid(inputFileFolder, fileList, cellSize, outputFolder, probThreshold
     
     return mapMatrix, math.floor(minLat/cellSize)*cellSize, math.floor(minLon/cellSize)*cellSize
 
-def add_eruptions_to_grid(inputFileFolder,fileList, eruptions, grid, probThreshold, minLat, minLon, cellSize):
+def add_eruptions_to_grid(outputFolder,fileList, eruptions, grid, probThreshold, minLat, minLon, cellSize):
     veis = dict()
-    savePath = inputFileFolder + "VEIs"
+    savePath = outputFolder + "VEIs"
     for i in range(len(fileList)):
         veis[fileList[i].split("/")[-1].rsplit(".",1)[0]] = pd.read_csv(savePath / Path(fileList[i]))
         
@@ -401,7 +401,6 @@ def get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize)
                         logC[stopYear-startYear-1] += amountC
                         surfaceGrid[i,j] = amountC
             carbonGrid[i,j] = sumC
-            
             
     return carbonGrid, surfaceGrid, logC
 

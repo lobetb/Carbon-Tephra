@@ -22,7 +22,7 @@ Declare variables
 timeStepLength = 1            #Time step for the simulation in months
 inputFileFolder = "C:/Users/Ben/OneDrive - UCL/GVP/"
 inputFile = "GVP_Eruption_Results.xls.xlsx"          #File containing infos for the eruptions, from GVP website
-outputFolder = "C:/Users/Ben/Desktop/results GVP/1500-bis/OutputSequential/"
+outputFolder = "C:/Users/Ben/Desktop/results GVP/1500/OutputSequential/"
 VEI4MAT = "atacazo_vei4.mat"
 refVolcano = 'Atacazo'
 probThreshold = 0.8     #Threshold of probability for the isopach
@@ -39,7 +39,7 @@ limits = [northLimit, southLimit, eastLimit, westLimit]
 surfaceC = "yes"        # Compute the accumulation of C in the surface soil. "yes" if it needs to be computed. "no" if it doesn't, or "fuck off",
                         # or anything except "yes" actually.
     
-mode = "mixed"     # Mode of inference of the eruptions. "stochastic" does a full stochastic approach
+mode = "sequential"     # Mode of inference of the eruptions. "stochastic" does a full stochastic approach
                         # for VEI4-5-6, "mixed" uses the historical data for VEI 5 and 6 and stochastic for
                         # VEI4. 
                         # "sequential" takes a more sequential approach : first computing
@@ -91,10 +91,7 @@ refZone = f.get_ref_zone(data, refVolcano)
 Functions calls
 """
 
-data = f.apply_coord_constraints(data, limits)
-
-refZone = f.get_ref_zone(data, refVolcano)
-
+"""
 counter0 = time.perf_counter()
 
 #Compute the probabilities for each volcano of erupting in a given time interval
@@ -110,7 +107,7 @@ print('Eruptions :' + str(counter2-counter1))
 
 #Create VEI files which are lat/lon transpositions of the reference VEI file, and a reference fileList
 #If the VEI files already exists, just generates the fileList for the sake of speed
-fileList = f.create_vei_files(inputFileFolder, refVolcano, data, refVEI, refZone)
+fileList = f.create_vei_files(outputFolder, refVolcano, data, refVEI, refZone)
 counter3 = time.perf_counter()
 print('Filelist :' + str(counter3-counter2))
 
@@ -137,7 +134,7 @@ print('Saving results :' + str(counter7-counter6))
 
 
 print('Total : ' + str(counter7-counter0))
-
+"""
 
 
 
@@ -146,34 +143,34 @@ Batch execution
 """
 
 """
-for i in range(1120):
+for i in range(2020):
     counter0 = time.perf_counter()
     probabilities = f.get_prob(data, startYear, stopYear, thresholdYear,timeStepLength, mode)
     eruptions = f.get_stoch_eruptions(data, probabilities, startYear, stopYear, thresholdYear, refZone, mode)
-    fileList = f.create_vei_files(inputFileFolder, refVolcano, data, refVEI, refZone)
+    fileList = f.create_vei_files(outputFolder, refVolcano, data, refVEI, refZone)
     grid, minLat, minLon = f.create_grid(inputFileFolder,fileList,cellSize, outputFolder, probThreshold)
     f.add_eruptions_to_grid(inputFileFolder,fileList, eruptions, grid, probThreshold, minLat, minLon, cellSize)
     carbonGrid, surfaceGrid, logC = f.get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize)
     count = f.save_results(outputFolder, carbonGrid, surfaceGrid, logC, eruptions)
     counter1 = time.perf_counter()
     print(str(count) + ": " + str(counter1-counter0) + " secondes")
+   """ 
     
-    
-outputFolder = "C:/Users/Ben/Desktop/results GVP/1500-bis/OutputMixed/"
+outputFolder = "C:/Users/Ben/Desktop/results GVP/1500/OutputMixed/"
 mode = "mixed"  
 
-for i in range(1120):
+for i in range(2020):
     counter0 = time.perf_counter()
     probabilities = f.get_prob(data, startYear, stopYear, thresholdYear,timeStepLength, mode)
     eruptions = f.get_stoch_eruptions(data, probabilities, startYear, stopYear, thresholdYear, refZone, mode)
-    fileList = f.create_vei_files(inputFileFolder, refVolcano, data, refVEI, refZone)
+    fileList = f.create_vei_files(outputFolder, refVolcano, data, refVEI, refZone)
     grid, minLat, minLon = f.create_grid(inputFileFolder,fileList,cellSize, outputFolder, probThreshold)
-    f.add_eruptions_to_grid(inputFileFolder,fileList, eruptions, grid, probThreshold, minLat, minLon, cellSize)
+    f.add_eruptions_to_grid(outputFolder,fileList, eruptions, grid, probThreshold, minLat, minLon, cellSize)
     carbonGrid, surfaceGrid, logC = f.get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize)
     count = f.save_results(outputFolder, carbonGrid, surfaceGrid, logC, eruptions)
     counter1 = time.perf_counter()
     print(str(count) + ": " + str(counter1-counter0) + " secondes")
- """   
+
     
 """
 Heatmap plot
