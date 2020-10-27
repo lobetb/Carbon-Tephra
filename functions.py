@@ -375,16 +375,16 @@ def carbonAccumulation(x):
 
 def get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize):
     carbonGrid = np.empty((len(grid[:]),len(grid[0])))
-    surfaceGrid = carbonGrid.copy()
+    surfaceGrid = np.empty((len(grid[:]),len(grid[0])))
     logC = [0] * (stopYear - startYear)
     for i in range(len(grid[:])):
         for j in range(len(grid[0])):
             sumC = 0
-            if len(grid[i,j]) > 2:
-                if not grid[i,j][-1] == startYear:
+            if not grid[i,j][-1] == startYear:
                     grid[i,j].append(startYear)
+            if len(grid[i,j]) > 3:
                 k = len(grid[i,j]) -1
-                while k > 2:
+                while k > 3:
                     timeDif = grid[i,j][k-1] - grid[i,j][k]
                     if timeDif > 0:
                         amountC, error = quad(carbonAccumulation, 0, timeDif)
@@ -392,15 +392,16 @@ def get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize)
                         logC[grid[i,j][k-1]-startYear] += amountC/2
                         sumC += amountC/2
                     k -= 1
-                if surfaceC == "yes":
-                    timeDif = stopYear - grid[i,j][2]
-                    if timeDif > 0:
-                        amountC, error = quad(carbonAccumulation, 0, stopYear - grid[i,j][2])
-                        amountC = amountC * cellSize**2
-                        sumC += amountC
-                        logC[stopYear-startYear-1] += amountC
-                        surfaceGrid[i,j] = amountC
             carbonGrid[i,j] = sumC
+            
+            if surfaceC == "yes":
+                timeDif = stopYear - grid[i,j][2]
+                if timeDif > 0:
+                    amountC, error = quad(carbonAccumulation, 0, timeDif)
+                    amountC = amountC * cellSize**2
+                    logC[stopYear-startYear-1] += amountC
+                    surfaceGrid[i,j] = amountC
+            
             
     return carbonGrid, surfaceGrid, logC
 

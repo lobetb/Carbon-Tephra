@@ -22,7 +22,7 @@ Declare variables
 timeStepLength = 1            #Time step for the simulation in months
 inputFileFolder = "C:/Users/Ben/OneDrive - UCL/GVP/"
 inputFile = "GVP_Eruption_Results.xls.xlsx"          #File containing infos for the eruptions, from GVP website
-outputFolder = "C:/Users/Ben/Desktop/results GVP/1500/OutputSequential/"
+outputFolder = "F:/1500/OutputSequential/"
 VEI4MAT = "atacazo_vei4.mat"
 refVolcano = 'Atacazo'
 probThreshold = 0.8     #Threshold of probability for the isopach
@@ -47,7 +47,7 @@ mode = "sequential"     # Mode of inference of the eruptions. "stochastic" does 
                         # approach.
 
 
-
+"""
 if not path.exists(outputFolder):
             mkdir(outputFolder)
 if path.exists(outputFolder + "parameters.txt"):
@@ -66,7 +66,7 @@ paramLog.write("limits = " + str(limits) + "\n")
 paramLog.write("surfaceC = " + str(surfaceC) + "\n")
 paramLog.write("mode = " + str(mode) + "\n")
 paramLog.close()
-
+"""
 
 """
 Import data
@@ -156,10 +156,29 @@ for i in range(2020):
     print(str(count) + ": " + str(counter1-counter0) + " secondes")
    """ 
     
-outputFolder = "C:/Users/Ben/Desktop/results GVP/1500/OutputMixed/"
-mode = "mixed"  
 
-for i in range(2020):
+outputFolder = "F:/Results GVP/sensitivité proba/0.8/"
+probThreshold = 0.95
+
+if not path.exists(outputFolder):
+        mkdir(outputFolder)
+if path.exists(outputFolder + "parameters.txt"):
+    remove(outputFolder + "parameters.txt")
+paramLog = open(outputFolder + "parameters.txt", 'a')
+paramLog.write("timeStepLength = " + str(timeStepLength) + "\n")
+paramLog.write("inputFile = " + str(inputFile) + "\n")
+paramLog.write("VEI4MAT = " + str(VEI4MAT) + "\n")
+paramLog.write("refVolcano = " + str(refVolcano) + "\n")
+paramLog.write("probThreshold = " + str(probThreshold) + "\n")
+paramLog.write("cellSize = " + str(cellSize) + "\n")
+paramLog.write("thresholdYear = " + str(thresholdYear) + "\n")
+paramLog.write("stopYear = " + str(stopYear) + "\n")
+paramLog.write("startYear = " + str(startYear) + "\n")
+paramLog.write("limits = " + str(limits) + "\n")
+paramLog.write("surfaceC = " + str(surfaceC) + "\n")
+paramLog.write("mode = " + str(mode) + "\n")
+paramLog.close()
+for i in range(130):
     counter0 = time.perf_counter()
     probabilities = f.get_prob(data, startYear, stopYear, thresholdYear,timeStepLength, mode)
     eruptions = f.get_stoch_eruptions(data, probabilities, startYear, stopYear, thresholdYear, refZone, mode)
