@@ -20,11 +20,12 @@ Declare variables
 """
 
 timeStepLength = 1            #Time step for the simulation in months
-inputFileFolder = "C:/Users/Ben/OneDrive - UCL/GVP/"
+inputFileFolder = "c:/users/ben/OneDrive - UCL/GVP/"
 inputFile = "GVP_Eruption_Results.xls.xlsx"          #File containing infos for the eruptions, from GVP website
-outputFolder = "F:/Results GVP/Sensi proba/"
+outputFolder = "F:/Results GVP/Sensi proba/Mixed/"
 VEI4MAT = "atacazo_vei4.mat"
 refVolcano = 'Atacazo'
+carbonReduction = 0.5   #Proportion of carbon loss in buried soils
 probThreshold = 0.8     #Threshold of probability for the isopach
 cellSize = 1000         #Size of one side of each cell, in meters
 thresholdYear = 1500    #Year above which the record is complete
@@ -39,34 +40,13 @@ limits = [northLimit, southLimit, eastLimit, westLimit]
 surfaceC = "yes"        # Compute the accumulation of C in the surface soil. "yes" if it needs to be computed. "no" if it doesn't, or "fuck off",
                         # or anything except "yes" actually.
     
-mode = "sequential"     # Mode of inference of the eruptions. "stochastic" does a full stochastic approach
+mode = "mixed"     # Mode of inference of the eruptions. "stochastic" does a full stochastic approach
                         # for VEI4-5-6, "mixed" uses the historical data for VEI 5 and 6 and stochastic for
                         # VEI4. 
                         # "sequential" takes a more sequential approach : first computing
                         # if there's an eruption, then the VEI, then attribution to a volcano. "sequential" uses the stochastic
                         # approach.
 
-
-"""
-if not path.exists(outputFolder):
-            mkdir(outputFolder)
-if path.exists(outputFolder + "parameters.txt"):
-    remove(outputFolder + "parameters.txt")
-paramLog = open(outputFolder + "parameters.txt", 'a')
-paramLog.write("timeStepLength = " + str(timeStepLength) + "\n")
-paramLog.write("inputFile = " + str(inputFile) + "\n")
-paramLog.write("VEI4MAT = " + str(VEI4MAT) + "\n")
-paramLog.write("refVolcano = " + str(refVolcano) + "\n")
-paramLog.write("probThreshold = " + str(probThreshold) + "\n")
-paramLog.write("cellSize = " + str(cellSize) + "\n")
-paramLog.write("thresholdYear = " + str(thresholdYear) + "\n")
-paramLog.write("stopYear = " + str(stopYear) + "\n")
-paramLog.write("startYear = " + str(startYear) + "\n")
-paramLog.write("limits = " + str(limits) + "\n")
-paramLog.write("surfaceC = " + str(surfaceC) + "\n")
-paramLog.write("mode = " + str(mode) + "\n")
-paramLog.close()
-"""
 
 """
 Import data
@@ -85,7 +65,53 @@ refVEI = [atacazoVEI4,atacazoVEI5,atacazoVEI6]
 data = f.apply_coord_constraints(data, limits)
 refZone = f.get_ref_zone(data, refVolcano)
 
+"""
+Batch execution
+""" 
+for j in (0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9):
+    probThreshold = j
+    outputFolder = "F:/Results GVP/Sensi proba/Mixed/" + str(j) + "/"
+    
+    
+    if not path.exists(outputFolder):
+            mkdir(outputFolder)
+    if path.exists(outputFolder + "parameters.txt"):
+        remove(outputFolder + "parameters.txt")
+    paramLog = open(outputFolder + "parameters.txt", 'a')
+    paramLog.write("timeStepLength = " + str(timeStepLength) + "\n")
+    paramLog.write("inputFile = " + str(inputFile) + "\n")
+    paramLog.write("VEI4MAT = " + str(VEI4MAT) + "\n")
+    paramLog.write("refVolcano = " + str(refVolcano) + "\n")
+    paramLog.write("carbonReduction = " + str(carbonReduction) + "\n")
+    paramLog.write("probThreshold = " + str(probThreshold) + "\n")
+    paramLog.write("cellSize = " + str(cellSize) + "\n")
+    paramLog.write("thresholdYear = " + str(thresholdYear) + "\n")
+    paramLog.write("stopYear = " + str(stopYear) + "\n")
+    paramLog.write("startYear = " + str(startYear) + "\n")
+    paramLog.write("limits = " + str(limits) + "\n")
+    paramLog.write("surfaceC = " + str(surfaceC) + "\n")
+    paramLog.write("mode = " + str(mode) + "\n")
+    paramLog.close()
 
+
+
+
+
+
+    for i in range(210):
+        
+        counter0 = time.perf_counter()
+        probabilities = f.get_prob(data, startYear, stopYear, thresholdYear,timeStepLength, mode)
+        fileList = f.create_vei_files(outputFolder, refVolcano, data, refVEI, refZone)
+        grid, minLat, minLon = f.create_grid(inputFileFolder,fileList,cellSize, outputFolder, probThreshold)
+        eruptions = f.get_stoch_eruptions(data, probabilities, startYear, stopYear, thresholdYear, refZone, mode)
+        f.add_eruptions_to_grid(outputFolder,fileList, eruptions, grid, probThreshold, minLat, minLon, cellSize)
+        carbonGrid, surfaceGrid, logC = f.get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize, carbonReduction)
+        count = f.save_results(outputFolder, carbonGrid, surfaceGrid, logC, eruptions)
+        
+        counter1 = time.perf_counter()
+        print(str(count) + ": " + str(counter1-counter0) + " secondes")
+    
 
 """
 Functions calls
@@ -134,62 +160,9 @@ print('Saving results :' + str(counter7-counter6))
 
 
 print('Total : ' + str(counter7-counter0))
-"""
+"""  
 
-
-
-"""
-Batch execution
-"""
-
-"""
-for i in range(2020):
-    counter0 = time.perf_counter()
-    probabilities = f.get_prob(data, startYear, stopYear, thresholdYear,timeStepLength, mode)
-    eruptions = f.get_stoch_eruptions(data, probabilities, startYear, stopYear, thresholdYear, refZone, mode)
-    fileList = f.create_vei_files(outputFolder, refVolcano, data, refVEI, refZone)
-    grid, minLat, minLon = f.create_grid(inputFileFolder,fileList,cellSize, outputFolder, probThreshold)
-    f.add_eruptions_to_grid(inputFileFolder,fileList, eruptions, grid, probThreshold, minLat, minLon, cellSize)
-    carbonGrid, surfaceGrid, logC = f.get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize)
-    count = f.save_results(outputFolder, carbonGrid, surfaceGrid, logC, eruptions)
-    counter1 = time.perf_counter()
-    print(str(count) + ": " + str(counter1-counter0) + " secondes")
-   """ 
     
-for i in (0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95):
-    outputFolder = "F:/Results GVP/Sensi proba/" + str(i) + "/"
-    probThreshold = i
-    
-    if not path.exists(outputFolder):
-            mkdir(outputFolder)
-    if path.exists(outputFolder + "parameters.txt"):
-        remove(outputFolder + "parameters.txt")
-    paramLog = open(outputFolder + "parameters.txt", 'a')
-    paramLog.write("timeStepLength = " + str(timeStepLength) + "\n")
-    paramLog.write("inputFile = " + str(inputFile) + "\n")
-    paramLog.write("VEI4MAT = " + str(VEI4MAT) + "\n")
-    paramLog.write("refVolcano = " + str(refVolcano) + "\n")
-    paramLog.write("probThreshold = " + str(probThreshold) + "\n")
-    paramLog.write("cellSize = " + str(cellSize) + "\n")
-    paramLog.write("thresholdYear = " + str(thresholdYear) + "\n")
-    paramLog.write("stopYear = " + str(stopYear) + "\n")
-    paramLog.write("startYear = " + str(startYear) + "\n")
-    paramLog.write("limits = " + str(limits) + "\n")
-    paramLog.write("surfaceC = " + str(surfaceC) + "\n")
-    paramLog.write("mode = " + str(mode) + "\n")
-    paramLog.close()
-    for i in range(150):
-        counter0 = time.perf_counter()
-        probabilities = f.get_prob(data, startYear, stopYear, thresholdYear,timeStepLength, mode)
-        eruptions = f.get_stoch_eruptions(data, probabilities, startYear, stopYear, thresholdYear, refZone, mode)
-        fileList = f.create_vei_files(outputFolder, refVolcano, data, refVEI, refZone)
-        grid, minLat, minLon = f.create_grid(inputFileFolder,fileList,cellSize, outputFolder, probThreshold)
-        f.add_eruptions_to_grid(outputFolder,fileList, eruptions, grid, probThreshold, minLat, minLon, cellSize)
-        carbonGrid, surfaceGrid, logC = f.get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize)
-        count = f.save_results(outputFolder, carbonGrid, surfaceGrid, logC, eruptions)
-        counter1 = time.perf_counter()
-        print(str(count) + ": " + str(counter1-counter0) + " secondes")
-
     
 """
 Heatmap plot

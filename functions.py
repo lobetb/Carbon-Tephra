@@ -12,7 +12,6 @@ from collections import Counter
 import math
 from os import path, mkdir,listdir
 from pathlib import Path
-from os.path import isfile, join
 from scipy.integrate import quad
 
 
@@ -259,7 +258,7 @@ def get_stoch_eruptions(data, probabilities, startYear, stopYear,threshYear,refZ
             k+=1
         
     eruptions = eruptions.sort_values(by=['Year'], ascending=False)
-    return(eruptions)
+    return eruptions
 
 def create_vei_files(outputFolder, refVolcano, data, refVEI, refZone):
     refLat = refZone[2]
@@ -373,9 +372,10 @@ def carbonAccumulation(x):
     res = 501.4*(x**(-0.55))
     return res
 
-def get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize):
-    carbonGrid = np.empty((len(grid[:]),len(grid[0])))
-    surfaceGrid = np.empty((len(grid[:]),len(grid[0])))
+def get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize, carbonReduction):
+    
+    carbonGridInt = np.empty((len(grid[:]),len(grid[0])))
+    surfaceGridInt = np.empty((len(grid[:]),len(grid[0])))
     logC = [0] * (stopYear - startYear)
     for i in range(len(grid[:])):
         for j in range(len(grid[0])):
@@ -384,15 +384,15 @@ def get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize)
                     grid[i,j].append(startYear)
             if len(grid[i,j]) > 3:
                 k = len(grid[i,j]) -1
-                while k > 3:
+                while k > 2:
                     timeDif = grid[i,j][k-1] - grid[i,j][k]
                     if timeDif > 0:
                         amountC, error = quad(carbonAccumulation, 0, timeDif)
                         amountC = amountC * cellSize**2
-                        logC[grid[i,j][k-1]-startYear] += amountC/2
-                        sumC += amountC/2
+                        logC[grid[i,j][k-1]-startYear] += amountC*carbonReduction
+                        sumC += amountC*carbonReduction
                     k -= 1
-            carbonGrid[i,j] = sumC
+            carbonGridInt[i,j] = sumC
             
             if surfaceC == "yes":
                 timeDif = stopYear - grid[i,j][2]
@@ -400,10 +400,10 @@ def get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize)
                     amountC, error = quad(carbonAccumulation, 0, timeDif)
                     amountC = amountC * cellSize**2
                     logC[stopYear-startYear-1] += amountC
-                    surfaceGrid[i,j] = amountC
+                    surfaceGridInt[i,j] = amountC
             
             
-    return carbonGrid, surfaceGrid, logC
+    return carbonGridInt, surfaceGridInt, logC
 
 def save_results(outputFolder, carbonGrid, surfaceGrid, logC, eruptions):
     if not path.exists(outputFolder + "Runs/") :
