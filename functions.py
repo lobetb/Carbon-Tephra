@@ -399,7 +399,7 @@ def get_carbon_grid(grid, startYear, stopYear, surfaceC, outputFolder, cellSize,
                 if timeDif > 0:
                     amountC, error = quad(carbonAccumulation, 0, timeDif)
                     amountC = amountC * cellSize**2
-                    logC[stopYear-startYear-1] += amountC
+                    #logC[stopYear-startYear-1] += amountC
                     surfaceGridInt[i,j] = amountC
             
             
