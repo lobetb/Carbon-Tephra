@@ -1,6 +1,6 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10958530.svg)](https://doi.org/10.5281/zenodo.10958530)
 
-# What is [Carbon-Tephra] ?
+# What is **Carbon-Tephra** ?
 ## Purpose
 **Carbon-Tephra** is a Python script to compute the amount of carbon trapped under [tephra](https://en.wikipedia.org/wiki/Tephra) deposited after volcano eruptions. It takes two input files : a MAT file describing isoprobabilities of tephra deposit [Biass, S., Bonadonna, C., Connor, L. et al. TephraProb: a Matlab package for probabilistic hazard assessments of tephra fallout. J Appl. Volcanol. 5, 10 (2016).](https://doi.org/10.1186/s13617-016-0050-5) and an xls file from the Global Volcanism Program (https://volcano.si.edu/).
 Before use, the xls file needs to be opened in Excel, the first line removed and the file resaved (something makes the file unreadable directly by Python).
