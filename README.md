@@ -16,7 +16,7 @@ The script includes three distincts modes to infer dates and locations of erupti
 
 After all the eruptions are attributed, the coordinate points at which the tephra cover is sufficient to trap accumulated carbon are extracted from the MAT file. For each point, the amount of trapped C is computed between the eruption dates. An option also allows to compute the C accumulated on the surface since the last eruption.
 
-While first versions of the script used an UTM coordinates system, this version use lat/lon (conversions are done using the [UTM package](https://github.com/Turbo87/utm). This allows for the script to be used on any country, or the whole world.
+While first versions of the script used an UTM coordinates system, this version uses lat/lon (conversions are done using the [UTM package](https://github.com/Turbo87/utm)). This allows for the script to be used on any country, or the whole world.
 
 Batch execution is possible and code is included in this project for that purpose.
 
