@@ -2,7 +2,7 @@
 """
 Created on Thu Jun 25 15:34:06 2020
 
-@author: Ben
+@author: Benjamin Lobet, benjaminlobet@gmail.com
 """
 
 """
