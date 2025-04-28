@@ -141,10 +141,10 @@ def get_stoch_eruptions(data, probabilities, startYear, stopYear,threshYear,refV
     if mode == "mixed":
         
         for j in range(len(probabilities)):
-            x = rd.choices([1,0], [probabilities[j][1],1-probabilities[j][1]], k=(stopMonth-startMonth))
+            x = rd.choices([1,0], [probabilities.loc[1,j],1-probabilities.loc[1,j]], k=(stopMonth-startMonth))
             y = get_index_positions(x,1)
-            z = [probabilities[j][3]]*len(y)
-            x = [probabilities[j][0]]*len(z)
+            z = [probabilities.loc[3,j]]*len(y)
+            x = [probabilities.loc[0,j]]*len(z)
     
             
             
@@ -179,10 +179,10 @@ def get_stoch_eruptions(data, probabilities, startYear, stopYear,threshYear,refV
     elif mode == "stochastic":
         
         for j in range(len(probabilities)):
-            x = rd.choices([1,0], [probabilities[j][1],1-probabilities[j][1]], k=(stopMonth-startMonth))
+            x = rd.choices([1,0], [probabilities.loc[1,j],1-probabilities.loc[1,j]], k=(stopMonth-startMonth))
             y = get_index_positions(x,1)
-            z = [probabilities[j][3]]*len(y)
-            x = [probabilities[j][0]]*len(z)
+            z = [probabilities.loc[3,j]]*len(y)
+            x = [probabilities.loc[0,j]]*len(z)
            
     
             
@@ -202,16 +202,16 @@ def get_stoch_eruptions(data, probabilities, startYear, stopYear,threshYear,refV
         listVEI6 = []
         
         for i in range(len(probabilities)):
-            probaEruptTot += probabilities[i][1]
-            if probabilities[i][3] == 4:
-                probaEruptVEI4 += probabilities[i][1]
-                listVEI4.append(probabilities[i])
-            if probabilities[i][3] == 5:
-                probaEruptVEI5 += probabilities[i][1]
-                listVEI5.append(probabilities[i])
-            if probabilities[i][3] == 6:
-                probaEruptVEI6 += probabilities[i][1]
-                listVEI6.append(probabilities[i])
+           probaEruptTot += probabilities[i][1]
+           if probabilities[i][3] == 4:
+               probaEruptVEI4 += probabilities[i][1]
+               listVEI4.append(probabilities[i])
+           if probabilities[i][3] == 5:
+               probaEruptVEI5 += probabilities[i][1]
+               listVEI5.append(probabilities[i])
+           if probabilities[i][3] == 6:
+               probaEruptVEI6 += probabilities[i][1]
+               listVEI6.append(probabilities[i])
 
         x = rd.choices([1,0],[probaEruptTot, 1-probaEruptTot], k=stopMonth-startMonth)
         y = get_index_positions(x,1)
@@ -261,8 +261,8 @@ def create_vei_files(outputFolder, refVolcano, data, refVEILatLonRel):
     for i in range(len(data)):
         if not path.exists(savePath / Path(data.loc[i,'Volcano Name'] + "VEI" + str(int(data.loc[i,'VEI'])) + ".csv")):
 
-            volcLat = data['Latitude'][i]
-            volcLon = data['Longitude'][i]
+            volcLat = data.loc[i,'Latitude']
+            volcLon = data.loc[i,'Longitude']
             
             if(data.loc[i,'VEI']) == 4:
                 dfCopy = VEI4.copy()
@@ -275,18 +275,18 @@ def create_vei_files(outputFolder, refVolcano, data, refVEILatLonRel):
             
             for j in range(len(dfCopy)):
                 try:
-                    dfCopy['Latitude'][j] += volcLat
-                    dfCopy['Longitude'][j] += volcLon
-                    tempUTM = utm.from_latlon(dfCopy['Latitude'][j], dfCopy['Longitude'][j])
+                    dfCopy.loc[j,'Latitude'] += volcLat
+                    dfCopy.loc[j,'Longitude'] += volcLon
+                    tempUTM = utm.from_latlon(dfCopy.loc[j,'Latitude'], dfCopy.loc[j,'Longitude'])
                     easting = (math.trunc(tempUTM[0]/1000))*1000
                     northing = (math.trunc(tempUTM[1]/1000))*1000
                     zNum = tempUTM[2]
                     zLet = tempUTM[3]
-                    Prob = dfCopy['Probability'][j]
+                    Prob = dfCopy.loc[j,'Probability']
                     
                     dfUTM.loc[len(dfUTM)] = [easting, northing, zNum, zLet, Prob]
                 except: 
-                    print(i, j, dfCopy['Longitude'][j], volcLon)
+                    print(i, j, dfCopy.loc[j,'Longitude'], volcLon)
                     return
             del dfCopy
             dfUTM.to_csv(savePath + "/" + data.loc[i,'Volcano Name'] + 'VEI' + str(int(data.loc[i,'VEI'])) + '.csv', sep=',')
@@ -317,14 +317,14 @@ def get_erupt_by_volc(eruptions, outputFolder):
     eruptListByVolc = []
     listNames = []
     for i in range(len(eruptions)):
-        concName = eruptions['Volcano'][i] + str(eruptions['VEI'][i])
+        concName = eruptions.loc[i,'Volcano'] + str(eruptions.loc[i,'VEI'])
         listNames.append(concName)
 
     for i in np.unique(listNames):
         tempList = [str(i)]
         for j in range(len(listNames)):
             if listNames[j] == i:
-                tempList.append(eruptions['Year'][j])
+                tempList.append(eruptions.loc[j,'Year'])
         eruptListByVolc.append(tempList)
     return eruptListByVolc
 
@@ -341,11 +341,11 @@ def add_eruptions_years(i,savePath,fileList, eruptions, startYear, eruptListByVo
     concName = str(fileList[i].rsplit('.',1)[0].split('VEI')[0]) + str(fileList[i].rsplit('.',1)[0].split('VEI')[1])
     for j in range(len(eruptListByVolc)):
         
-        if eruptListByVolc[j][0] == concName:
+        if eruptListByVolc.loc[0,j] == concName:
             for k in range(len(df)):
                 tempList = []
-                tempList.append([df['Northing'][k], df['Easting'][k], df['zNum'][k], df['zLet'][k]])
-                tempList[len(tempList)-1].append(eruptListByVolc[j][1:len(eruptListByVolc[j])])
+                tempList.append([df.loc[k,'Northing'], df.loc[k,'Easting'], df.loc[k,'zNum'], df.loc[k,'zLet']])
+                tempList[len(tempList)-1].append(eruptListByVolc.loc[1:len(eruptListByVolc[j]),j])
                 tempListAgr.append(tempList)
     
     return tempListAgr
@@ -364,7 +364,7 @@ def add_eruptions_years_serial(outputFolder,fileList, eruptions, startYear, erup
             if eruptListByVolc[j][0] == concName:
                 for k in range(len(df)):
                     tempList = []
-                    tempList.append([df['Northing'][k], df['Easting'][k], df['zNum'][k], df['zLet'][k]])
+                    tempList.append([df.loc[k,'Northing'], df.loc[k,'Easting'], df.loc[k,'zNum'], df.loc[k,'zLet']])
                     tempList[len(tempList)-1].append(eruptListByVolc[j][1:len(eruptListByVolc[j])])
                     bigList.append(tempList)
     
@@ -507,8 +507,8 @@ def convertLatLon(data,refVolcano,refVEI, probThreshold):
             k += 1
             
     for i in range(len(atacazoVEI4LatLon)):
-        atacazoVEI4LatLon['Latitude'][i] -= refLat
-        atacazoVEI4LatLon['Longitude'][i] -= refLon
+        atacazoVEI4LatLon.loc[i,'Latitude'] -= refLat
+        atacazoVEI4LatLon.loc[i,'Longitude'] -= refLon
             
     atacazoVEI5LatLon = pd.DataFrame(columns=("Latitude","Longitude","Probability"))
     k = 0
@@ -525,8 +525,8 @@ def convertLatLon(data,refVolcano,refVEI, probThreshold):
             atacazoVEI5LatLon.loc[k] = (LatLon[0], LatLon[1], atacazoVEI5[i,2])
             k += 1
     for i in range(len(atacazoVEI5LatLon)):
-        atacazoVEI5LatLon['Latitude'][i] -= refLat
-        atacazoVEI5LatLon['Longitude'][i] -= refLon
+        atacazoVEI5LatLon.loc[i,'Latitude'] -= refLat
+        atacazoVEI5LatLon.loc[i,'Longitude'] -= refLon
     
     atacazoVEI6LatLon = pd.DataFrame(columns=("Latitude","Longitude","Probability"))
     k = 0
@@ -543,8 +543,8 @@ def convertLatLon(data,refVolcano,refVEI, probThreshold):
             atacazoVEI6LatLon.loc[k] = (LatLon[0], LatLon[1], atacazoVEI6[i,2])
             k += 1
     for i in range(len(atacazoVEI6LatLon)):
-        atacazoVEI6LatLon['Latitude'][i] -= refLat
-        atacazoVEI6LatLon['Longitude'][i] -= refLon
+        atacazoVEI6LatLon.loc[i,'Latitude'] -= refLat
+        atacazoVEI6LatLon.loc[i,'Longitude'] -= refLon
 
     refVEILatLonRel = [atacazoVEI4LatLon,atacazoVEI5LatLon,atacazoVEI6LatLon]
     counter1 = time.perf_counter()
