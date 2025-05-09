@@ -28,4 +28,4 @@ The script outputs a number of files :
 
 ## Publication
 
-Results from the model have been published in Nature Communications on the 8th of May 2025 : https://www.nature.com/articles/s41467-025-59692-4
+Results from the model applied to the volcanoes in Ecuador have been published in Nature Communications on the 8th of May 2025 : https://www.nature.com/articles/s41467-025-59692-4
