@@ -26,3 +26,6 @@ The script outputs a number of files :
 2. in a "logC" subfolder, a file "logCrunX.csv" containing the total amount of C stored as a function of time of simulation.
 3. in a "logErupt" subfolder, a file containing a line per eruption, with the volcano, the VEI and the year of eruption.
 
+## Publication
+
+Results from the model have been published in Nature Communications on the 8th of May 2025 : https://www.nature.com/articles/s41467-025-59692-4
